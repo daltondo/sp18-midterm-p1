@@ -63,15 +63,16 @@ contract Crowdsale {
 		}
 	}
 
-	function buy() public payable returns (bool success) {
+	function buy(uint256 _amount) public payable returns (bool success) {
 		if (buyersWaiting.getFirst() == msg.sender && buyersWaiting.qsize() > 1 && now > startTime && now < endTime) {
 			uint256 ethSent = msg.value;
 			ownerEth += ethSent;
 			uint256 amountOfNick = tokenValue / ethSent;
 
-			if (tokensSold + amountOfNick < totalSupply) {
+			if (tokensSold + amountOfNick < totalSupply && amountOfNick == _amount) {
 				tokensSold += amountOfNick;
 				nick.transferFrom(owner, msg.sender, amountOfNick);
+				Purchase(msg.sender, amountOfNick, block.timestamp);
 				buyersWaiting.dequeue();
 				return true;
 			} else {
@@ -82,25 +83,23 @@ contract Crowdsale {
 			return false;
 		}
 	}
+
+	function refund(uint256 _amount) public payable returns (bool success) {
+		uint256 ethSent = msg.value;
+		ownerEth += ethSent;
+		uint256 amountOfNick = tokenValue / ethSent;
+
+		if (nick.balanceOf(msg.sender) >= amountOfNick && amountOfNick == _amount) {
+			tokensSold -= amountOfNick;
+			nick.transferFrom(msg.sender, owner, amountOfNick);
+			Refund(msg.sender, amountOfNick, block.timestamp);
+			return true;
+		} else {
+			revert();
+			return false;
+		}
+	}
+
+	event Purchase(address buyer, uint256 _amount, uint256 _timeOfPurchase);
+	event Refund(address refunder, uint256 _amount, uint256 _timeOfRefund);
 }
-
-// Owner:
-// - Must be set on deployment X
-// - Must be able to time-cap the sale X
-// - Must keep track of start-time X
-// 		- Must keep track of end-time/time remaining since start-time X 
-// 		- Must be able to specify an initial amount of tokens to create X
-// - Must be able to specify the amount of tokens 1 wei is worth X
-// - Must be able to mint new tokens X
-// 		- This amount would be added to totalSupply in Token.sol X
-// - Must be able to burn tokens not sold yet X
-// 		- This amount would be subtracted from totalSupply in Token.sol X
-// - Must be able to receive funds from contract after the sale is over 
-
-// Buyers:
-// - Must be able to buy tokens directly from the contract and as long as the sale has not ended, if they are first in the queue and there is someone waiting line behind them
-// 		- This would change their balance in Token.sol
-// 		- This would change the number of tokens sold
-// - Must be able to refund their tokens as long as the sale has not ended. Their place in the queue does not matter
-// 		- This would change their balance in Token.sol
-// 		- This would change the number of tokens sold
