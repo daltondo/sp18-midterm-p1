@@ -20,7 +20,7 @@ contract Queue {
 	// YOUR CODE HERE
 
 	/* Add constructor */
-	function Queue(uint _timeLimit) {
+	function Queue(uint _timeLimit) public {
 		timeLimit = _timeLimit;
 		buyers = new address[](size);
 		pplInQ = 0;
@@ -28,19 +28,19 @@ contract Queue {
 	// YOUR CODE HERE
 
 	/* Returns the number of people waiting in line */
-	function qsize() constant returns(uint8) {
+	function qsize() constant public returns(uint8) {
 		// YOUR CODE HERE
 		return pplInQ;
 	}
 
 	/* Returns whether the queue is empty or not */
-	function empty() constant returns(bool) {
+	function empty() constant public returns(bool) {
 		// YOUR CODE HERE
 		return pplInQ == 0;
 	}
 	
 	/* Returns the address of the person in the front of the queue */
-	function getFirst() constant returns(address) {
+	function getFirst() constant public returns(address) {
 		// YOUR CODE HERE
 		if (buyers[0] != 0) {
 			return buyers[0];
@@ -48,7 +48,7 @@ contract Queue {
 	}
 	
 	/* Allows `msg.sender` to check their position in the queue */
-	function checkPlace() constant returns(uint8) {
+	function checkPlace() constant public returns(uint8) {
 		// YOUR CODE HERE
 		for (uint8 i = 0; i <= size; i++) {
 			if (buyers[i] == msg.sender) {
@@ -63,7 +63,7 @@ contract Queue {
 	/* Allows anyone to expel the first person in line if their time
 	 * limit is up
 	 */
-	function checkTime() {
+	function checkTime() public {
 		// YOUR CODE HERE
 		address firstPerson = buyers[0];
 		if (block.timestamp - timeInQ[firstPerson] > timeLimit) {
@@ -75,7 +75,7 @@ contract Queue {
 	/* Removes the first person in line; either when their time is up or when
 	 * they are done with their purchase
 	 */
-	function dequeue() {
+	function dequeue() public {
 		// YOUR CODE HERE
 		pplInQ -= 1;
 		buyers[0] = 0;
@@ -95,7 +95,7 @@ contract Queue {
 	}
 
 	/* Places `addr` in the first empty position in the queue */
-	function enqueue(address addr) {
+	function enqueue(address addr) public {
 		// YOUR CODE HERE
 		if (pplInQ <= 5) {
 			pplInQ += 1;

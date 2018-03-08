@@ -39,7 +39,7 @@ contract Crowdsale {
 	}
 
 
-	function timeRemaining() public returns (uint256) {
+	function timeRemaining() public view returns (uint256) {
 		return endTime - block.timestamp;
 	}
 
@@ -48,20 +48,22 @@ contract Crowdsale {
 		_;
 	}
 
-	function mint(uint256 _total) private ownerOnly() {
-		totalSupply += _total;
+	function mint(uint256 _amount) private ownerOnly() {
+		totalSupply += _amount;
+		nick.mint(_amount);
 	}
 
-	function burn(uint256 _total) private ownerOnly() returns (bool success) {
-		if (totalSupply - tokensSold > _total) {
-			totalSupply -= _total;
+	function burn(uint256 _amount) private ownerOnly() returns (bool success) {
+		if (totalSupply - tokensSold > _amount) {
+			nick.burn(_amount);
+			totalSupply -= _amount;
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	function buy() public returns (bool success) {
+	function buy() public payable returns (bool success) {
 		if (buyersWaiting.getFirst() == msg.sender && buyersWaiting.qsize() > 1 && now > startTime && now < endTime) {
 			uint256 ethSent = msg.value;
 			ownerEth += ethSent;
@@ -69,13 +71,13 @@ contract Crowdsale {
 
 			if (tokensSold + amountOfNick < totalSupply) {
 				tokensSold += amountOfNick;
-
+				nick.transferFrom(owner, msg.sender, amountOfNick);
+				buyersWaiting.dequeue();
+				return true;
 			} else {
 				revert();
+				return false;
 			}
-
-			
-			return true;
 		} else {
 			return false;
 		}
